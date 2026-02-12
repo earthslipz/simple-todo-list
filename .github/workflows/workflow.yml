@@ -32,7 +32,9 @@ jobs:
         with:
           files: ./coverage/lcov.info
           fail_ci_if_error: false
-docker:
+
+  # สังเกตว่า docker: ต้องย่อหน้าเข้ามา 2 เคาะ ให้ตรงกับ test:
+  docker:
     runs-on: ubuntu-latest
     needs: test
     permissions:
@@ -72,4 +74,4 @@ docker:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          
+          #
