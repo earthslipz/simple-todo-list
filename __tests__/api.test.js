@@ -156,6 +156,63 @@ describe('Todo API Endpoints', () => {
     });
   });
 
+  describe('PATCH /api/todos/:id', () => {
+    test('should edit todo text', async () => {
+      const createResponse = await request(app)
+        .post('/api/todos')
+        .send({ text: 'Original text' });
+
+      const todoId = createResponse.body.id;
+
+      const response = await request(app)
+        .patch(`/api/todos/${todoId}`)
+        .send({ text: 'Updated text' });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('text', 'Updated text');
+      expect(response.body).toHaveProperty('id', todoId);
+    });
+
+    test('should return 400 if new text is missing', async () => {
+      const createResponse = await request(app)
+        .post('/api/todos')
+        .send({ text: 'Will fail' });
+
+      const todoId = createResponse.body.id;
+
+      const response = await request(app)
+        .patch(`/api/todos/${todoId}`)
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error', 'Todo text is required');
+    });
+
+    test('should return 400 if new text is only whitespace', async () => {
+      const createResponse = await request(app)
+        .post('/api/todos')
+        .send({ text: 'Will fail too' });
+
+      const todoId = createResponse.body.id;
+
+      const response = await request(app)
+        .patch(`/api/todos/${todoId}`)
+        .send({ text: '   ' });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error', 'Todo text is required');
+    });
+
+    test('should return 404 if todo not found', async () => {
+      const response = await request(app)
+        .patch('/api/todos/999999')
+        .send({ text: 'Does not matter' });
+
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty('error', 'Todo not found');
+    });
+  });
+
   describe('DELETE /api/todos/:id', () => {
     test('should delete a todo', async () => {
       // Create a todo
