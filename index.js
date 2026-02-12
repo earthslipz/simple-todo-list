@@ -73,7 +73,7 @@ app.post('/api/todos', (req, res) => {
   }
 });
 
-// Toggle todo completion
+// Toggle todo completion (ส่วนที่แก้ไข)
 app.put('/api/todos/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const todos = readTodos();
@@ -83,7 +83,15 @@ app.put('/api/todos/:id', (req, res) => {
     return res.status(404).json({ error: 'Todo not found' });
   }
   
-  todos[todoIndex].completed = true;
+  // Toggle status (สลับค่า true/false)
+  todos[todoIndex].completed = !todos[todoIndex].completed;
+  
+  // Save changes to file and return response
+  if (writeTodos(todos)) {
+    res.json(todos[todoIndex]);
+  } else {
+    res.status(500).json({ error: 'Failed to update todo' });
+  }
 });
 
 // Delete a todo
