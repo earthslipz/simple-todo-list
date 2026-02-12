@@ -13,7 +13,11 @@ app.use(express.static('public'));
 // Initialize todos file if it doesn't exist
 function initTodosFile() {
   if (!fs.existsSync(TODOS_FILE)) {
-    fs.writeFileSync(TODOS_FILE, JSON.stringify([]));
+    const initial = {
+      name: 'My Todo List',
+      todos: []
+    };
+    fs.writeFileSync(TODOS_FILE, JSON.stringify(initial, null, 2));
   }
 }
 
@@ -22,7 +26,10 @@ function readTodos() {
   try {
     initTodosFile();
     const data = fs.readFileSync(TODOS_FILE, 'utf8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    if (Array.isArray(parsed)) return parsed; // legacy format
+    if (parsed && Array.isArray(parsed.todos)) return parsed.todos;
+    return [];
   } catch (error) {
     console.error('Error reading todos:', error);
     return [];
@@ -32,10 +39,51 @@ function readTodos() {
 // Write todos to file
 function writeTodos(todos) {
   try {
-    fs.writeFileSync(TODOS_FILE, JSON.stringify(todos, null, 2));
+    // Preserve list name if present, write storage as object { name, todos }
+    let name = 'My Todo List';
+    try {
+      const data = fs.readFileSync(TODOS_FILE, 'utf8');
+      const parsed = JSON.parse(data);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.name) {
+        name = parsed.name;
+      }
+    } catch (e) {
+      // ignore and use default name
+    }
+
+    const storage = { name, todos };
+    fs.writeFileSync(TODOS_FILE, JSON.stringify(storage, null, 2));
     return true;
   } catch (error) {
     console.error('Error writing todos:', error);
+    return false;
+  }
+}
+
+// Read list name
+function readListName() {
+  try {
+    initTodosFile();
+    const data = fs.readFileSync(TODOS_FILE, 'utf8');
+    const parsed = JSON.parse(data);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.name) {
+      return parsed.name;
+    }
+    return 'My Todo List';
+  } catch (error) {
+    return 'My Todo List';
+  }
+}
+
+// Write list name (preserve todos)
+function writeListName(name) {
+  try {
+    const todos = readTodos();
+    const storage = { name, todos };
+    fs.writeFileSync(TODOS_FILE, JSON.stringify(storage, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Error writing list name:', error);
     return false;
   }
 }
@@ -117,6 +165,26 @@ app.patch('/api/todos/:id', (req, res) => {
     res.json(todos[todoIndex]);
   } else {
     res.status(500).json({ error: 'Failed to update todo' });
+  }
+});
+
+// Get list name
+app.get('/api/list', (req, res) => {
+  const name = readListName();
+  res.json({ name });
+});
+
+// Update list name
+app.patch('/api/list', (req, res) => {
+  const { name } = req.body;
+  if (!name || name.trim() === '') {
+    return res.status(400).json({ error: 'List name is required' });
+  }
+
+  if (writeListName(name.trim())) {
+    res.json({ name: name.trim() });
+  } else {
+    res.status(500).json({ error: 'Failed to update list name' });
   }
 });
 

@@ -305,4 +305,33 @@ describe('Todo API Endpoints', () => {
       expect(response.body[2].text).toBe('Todo 3');
     });
   });
+
+  describe('List name endpoints', () => {
+    test('should return default list name when none set', async () => {
+      const response = await request(app).get('/api/list');
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('name', 'My Todo List');
+    });
+
+    test('should update the list name', async () => {
+      const update = await request(app)
+        .patch('/api/list')
+        .send({ name: 'Work Todos' });
+
+      expect(update.status).toBe(200);
+      expect(update.body).toHaveProperty('name', 'Work Todos');
+
+      const get = await request(app).get('/api/list');
+      expect(get.body).toHaveProperty('name', 'Work Todos');
+    });
+
+    test('should return 400 for empty name', async () => {
+      const response = await request(app)
+        .patch('/api/list')
+        .send({ name: '   ' });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error', 'List name is required');
+    });
+  });
 });
