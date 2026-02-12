@@ -3,12 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>This is Chaiyong's Todo List</title>
+    <title>This is Phubase Todo List</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>📝 Chaiyong's Todo List</h1>
+        <h1>📝 Phubase Todo List</h1>
+            <h1>
+                <span id="listName">📝 Phubase Todo List</span>
+                <button id="editNameBtn" class="small-btn">Edit</button>
+            </h1>
+            <div id="editNameContainer" class="edit-name" style="display:none; margin-bottom:12px;">
+                <input type="text" id="listNameInput" placeholder="List name" />
+                <button id="saveNameBtn" class="small-btn">Save</button>
+                <button id="cancelNameBtn" class="small-btn">Cancel</button>
+            </div>
         
         <div class="input-container">
             <input type="text" id="todoInput" placeholder="Add a new todo..." />

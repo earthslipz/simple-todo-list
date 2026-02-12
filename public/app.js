@@ -1,5 +1,6 @@
 // API endpoints
 const API_BASE = '/api/todos';
+const LIST_API = '/api/list';
 
 // DOM elements
 const todoInput = document.getElementById('todoInput');
@@ -7,6 +8,12 @@ const addBtn = document.getElementById('addBtn');
 const todoList = document.getElementById('todoList');
 const totalCount = document.getElementById('totalCount');
 const completedCount = document.getElementById('completedCount');
+const listNameEl = document.getElementById('listName');
+const editNameBtn = document.getElementById('editNameBtn');
+const editNameContainer = document.getElementById('editNameContainer');
+const listNameInput = document.getElementById('listNameInput');
+const saveNameBtn = document.getElementById('saveNameBtn');
+const cancelNameBtn = document.getElementById('cancelNameBtn');
 
 // State
 let todos = [];
@@ -20,6 +27,43 @@ async function fetchTodos() {
     } catch (error) {
         console.error('Error fetching todos:', error);
         alert('Failed to load todos');
+    }
+}
+
+// Fetch list name
+async function fetchListName() {
+    try {
+        const res = await fetch(LIST_API);
+        if (!res.ok) return;
+        const data = await res.json();
+        listNameEl.textContent = data.name;
+    } catch (e) {
+        console.error('Failed to fetch list name', e);
+    }
+}
+
+// Update list name
+async function updateListName(newName) {
+    try {
+        const res = await fetch(LIST_API, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: newName }),
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alert(err.error || 'Failed to update list name');
+            return false;
+        }
+
+        const data = await res.json();
+        listNameEl.textContent = data.name;
+        return true;
+    } catch (e) {
+        console.error('Failed to update list name', e);
+        alert('Failed to update list name');
+        return false;
     }
 }
 
@@ -142,5 +186,28 @@ todoInput.addEventListener('keypress', (e) => {
     }
 });
 
+// List name edit handlers
+editNameBtn.addEventListener('click', () => {
+    listNameInput.value = listNameEl.textContent || '';
+    editNameContainer.style.display = 'block';
+    listNameInput.focus();
+});
+
+cancelNameBtn.addEventListener('click', () => {
+    editNameContainer.style.display = 'none';
+});
+
+saveNameBtn.addEventListener('click', async () => {
+    const newName = listNameInput.value.trim();
+    if (!newName) {
+        alert('Please enter a list name');
+        return;
+    }
+
+    const ok = await updateListName(newName);
+    if (ok) editNameContainer.style.display = 'none';
+});
+
 // Initialize
 fetchTodos();
+fetchListName();
